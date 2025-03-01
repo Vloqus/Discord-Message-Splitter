@@ -3,28 +3,39 @@
 <head>
   <title>Discord Message Splitter - Made by Jan</title>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
     
-    /* Base Variables */
+    /* Base Variables & Defaults */
     :root {
-      --accent: #0078d4;
+      --default-accent: #0078d4;
+      --default-chunk-size: 2000;
+      --default-font-size: 14;
+      --default-font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+      --default-animation-speed: 300;
+      --default-multiline-clamp: 4;
+      --default-notification-duration: 1000;
+      --default-border-thickness: 2;
+      --default-border-radius: 12;
+      --default-max-parts: 0;
+      
+      --accent: var(--default-accent);
+      --border-thickness: var(--default-border-thickness);
       --container-radius: 20px;
-      --part-radius: 12px;
+      --part-radius: var(--default-border-radius);
       --btn-radius: 8px;
+      
+      /* Settings menu colors – these update with the theme */
+      --menu-bg: #fff;
+      --menu-text: #111;
     }
     
-    /* Global & Transition */
-    body {
-      margin: 0;
-      padding: 0;
-      font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
-      overflow: hidden;
-      transition: background 0.3s, color 0.3s;
-    }
-    
-    /* DARK THEME */
+    /* Theme-specific Variables */
+    /* Dark Theme */
     body.dark-theme {
+      --menu-bg: #222;
+      --menu-text: #eee;
       background: linear-gradient(135deg, #121212, #000);
       color: #fff;
     }
@@ -41,9 +52,23 @@
       background-color: rgba(255,255,255,0.1);
       border-color: var(--accent);
     }
+    /* Dark Theme Buttons */
+    body.dark-theme button.split-btn,
+    body.dark-theme button.theme-toggle,
+    body.dark-theme button.settings-toggle {
+      background-color: #1a1a1a;
+      color: #fff;
+    }
+    body.dark-theme button.split-btn:hover,
+    body.dark-theme button.theme-toggle:hover,
+    body.dark-theme button.settings-toggle:hover {
+      background-color: #333;
+    }
     
-    /* LIGHT THEME */
+    /* Light Theme */
     body.light-theme {
+      --menu-bg: #f0f0f0;
+      --menu-text: #111;
       background: linear-gradient(135deg, #f0f0f0, #fff);
       color: #000;
     }
@@ -60,9 +85,23 @@
       background-color: #eee;
       border-color: #005ea6;
     }
+    /* Light Theme Buttons */
+    body.light-theme button.split-btn,
+    body.light-theme button.theme-toggle,
+    body.light-theme button.settings-toggle {
+      background-color: #ccc;
+      color: #000;
+    }
+    body.light-theme button.split-btn:hover,
+    body.light-theme button.theme-toggle:hover,
+    body.light-theme button.settings-toggle:hover {
+      background-color: #bbb;
+    }
     
-    /* FUN THEME */
+    /* Fun Theme */
     body.fun-theme {
+      --menu-bg: rgba(255,255,255,0.1);
+      --menu-text: #fff;
       background: linear-gradient(135deg, #8f94fb, #4e54c8);
       color: #fff;
     }
@@ -79,13 +118,35 @@
       background-color: rgba(255,255,255,0.2);
       border-color: #ff4081;
     }
+    /* Fun Theme Buttons */
+    body.fun-theme button.split-btn,
+    body.fun-theme button.theme-toggle,
+    body.fun-theme button.settings-toggle {
+      background-color: #ff4081;
+      color: #fff;
+    }
+    body.fun-theme button.split-btn:hover,
+    body.fun-theme button.theme-toggle:hover,
+    body.fun-theme button.settings-toggle:hover {
+      background-color: #e73370;
+    }
+    
+    /* Global Styles */
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: var(--default-font-family);
+      font-size: var(--default-font-size)px;
+      overflow-y: auto;
+      transition: background 0.3s, color 0.3s;
+    }
     
     /* Centered Container */
     .container {
       width: 90%;
       max-width: 600px;
       max-height: 90vh;
-      margin: auto;
+      margin: 20px auto;
       border-radius: var(--container-radius);
       box-shadow: 0 8px 24px rgba(0,0,0,0.3);
       padding: 24px;
@@ -103,11 +164,11 @@
       margin: 0 0 10px 0;
     }
     
-    /* Centered Textbox with new color */
+    /* Responsive Textbox */
     textarea {
       width: 80%;
       display: block;
-      margin: 0 auto 10px auto;
+      margin: 0 auto 10px;
       height: 120px;
       resize: none;
       padding: 10px;
@@ -117,12 +178,10 @@
       outline: none;
     }
     
-    /* Rounded Split Message Button: Blackish & Rectangular */
+    /* Split Message Button */
     button.split-btn {
       margin-top: 10px;
       padding: 10px 20px;
-      background-color: #1a1a1a;
-      color: white;
       border: none;
       cursor: pointer;
       font-weight: bold;
@@ -131,21 +190,51 @@
     }
     button.split-btn:hover {
       transform: scale(1.05);
-      background-color: #333;
     }
     
-    /* Parts Container: Scrollable and dynamic */
+    /* Theme Toggle Button (Moon Emoji) */
+    button.theme-toggle {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      padding: 8px 12px;
+      border: none;
+      border-radius: var(--btn-radius);
+      cursor: pointer;
+      font-size: 20px;
+      transition: transform 0.2s, background-color 0.2s;
+    }
+    button.theme-toggle:hover {
+      transform: scale(1.1);
+    }
+    
+    /* Settings Toggle Button (Gear Icon) */
+    button.settings-toggle {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      padding: 8px 12px;
+      border: none;
+      border-radius: var(--btn-radius);
+      cursor: pointer;
+      font-size: 20px;
+      transition: transform 0.2s, background-color 0.2s;
+    }
+    button.settings-toggle:hover {
+      transform: scale(1.1);
+    }
+    
+    /* Parts Container */
     #parts {
       margin-top: 10px;
-      max-height: 60vh;
-      overflow-y: auto;
+      padding-right: 10px;
     }
     
     /* Each Split Part */
     .part {
       font-size: 14px;
       padding: 10px;
-      border: 2px solid;
+      border: 2px solid var(--accent); /* Default border: 2px solid accent */
       border-radius: var(--part-radius);
       margin-bottom: 8px;
       cursor: pointer;
@@ -156,22 +245,14 @@
       word-wrap: break-word;
       display: -webkit-box;
       -webkit-box-orient: vertical;
-      -webkit-line-clamp: 4;
+      -webkit-line-clamp: var(--default-multiline-clamp, 4);
       overflow: hidden;
       text-overflow: ellipsis;
     }
-    .part:hover {
-      filter: brightness(1.2);
-    }
-    .part.copied {
-      filter: blur(3px);
-    }
-    .part:nth-child(odd) {
-      animation: colorCycle 5s infinite;
-    }
-    .part:nth-child(even) {
-      animation: colorCycleReverse 5s infinite;
-    }
+    .part:hover { filter: brightness(1.2); }
+    .part.copied { filter: blur(3px); }
+    .part:nth-child(odd) { animation: colorCycle 5s infinite; }
+    .part:nth-child(even) { animation: colorCycleReverse 5s infinite; }
     @keyframes colorCycle {
       0%   { border-color: var(--accent); }
       50%  { border-color: #00c853; }
@@ -183,7 +264,7 @@
       100% { border-color: #00c853; }
     }
     
-    /* Floating Copied Notification */
+    /* Floating "Copied!" Notification */
     #copy-notification {
       position: absolute;
       top: 10px;
@@ -196,25 +277,6 @@
       pointer-events: none;
       font-weight: bold;
       transition: opacity 0.5s ease, transform 0.5s ease;
-    }
-    
-    /* Theme Toggle Button as Moon Emoji */
-    button.theme-toggle {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      padding: 8px 12px;
-      background-color: #1a1a1a;
-      color: #fff;
-      border: none;
-      border-radius: var(--btn-radius);
-      cursor: pointer;
-      font-size: 20px;
-      transition: transform 0.2s, background-color 0.2s;
-    }
-    button.theme-toggle:hover {
-      transform: scale(1.1);
-      background-color: #333;
     }
     
     /* Rainbow text for "Jan" */
@@ -240,15 +302,84 @@
       text-decoration: none;
       font-weight: bold;
     }
-    footer a:hover {
-      text-decoration: underline;
+    footer a:hover { text-decoration: underline; }
+    
+    /* Settings Modal */
+    #settings-modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background: rgba(0,0,0,0.6);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      animation: fadeInModal 0.3s ease;
+    }
+    @keyframes fadeInModal {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+    #settings-modal .modal-content {
+      background: var(--menu-bg);
+      color: var(--menu-text);
+      padding: 20px;
+      border-radius: 10px;
+      width: 350px;
+      max-width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+      position: relative;
+      margin: 0 auto;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+    #settings-modal .modal-content h3 {
+      margin-top: 0;
+    }
+    #settings-modal .close-btn {
+      position: absolute;
+      top: 10px; right: 10px;
+      background: none;
+      border: none;
+      color: var(--menu-text);
+      font-size: 24px;
+      cursor: pointer;
+    }
+    #settings-modal .modal-content label,
+    #settings-modal .modal-content input,
+    #settings-modal .modal-content select,
+    #settings-modal .modal-content textarea {
+      width: 90%;
+      margin-bottom: 10px;
+      text-align: left;
+    }
+    #settings-modal textarea { resize: vertical; }
+    #settings-modal button.save-btn,
+    #settings-modal button.reset-btn {
+      margin-top: 10px;
+      width: 90%;
+      padding: 10px;
+      background-color: #1a1a1a;
+      color: #fff;
+      border: none;
+      border-radius: var(--btn-radius);
+      cursor: pointer;
+      font-weight: bold;
+      transition: background-color 0.2s;
+    }
+    #settings-modal button.save-btn:hover,
+    #settings-modal button.reset-btn:hover {
+      background-color: #333;
     }
   </style>
 </head>
 <body class="dark-theme">
   <div class="container">
-    <!-- Theme Toggle Button: Moon Emoji -->
+    <!-- Theme Toggle Button (Moon Emoji) -->
     <button class="theme-toggle" onclick="cycleTheme()">🌙</button>
+    <!-- Settings Toggle Button (Gear Icon) -->
+    <button class="settings-toggle" onclick="toggleSettings()">⚙️</button>
     
     <h2>Discord Message Splitter</h2>
     
@@ -258,7 +389,7 @@
     <div id="progress-bar"></div>
     <div id="parts"></div>
     
-    <!-- Floating Copied Notification -->
+    <!-- Floating "Copied!" Notification -->
     <div id="copy-notification">Copied!</div>
     
     <footer>
@@ -266,20 +397,223 @@
     </footer>
   </div>
   
+  <!-- Settings Modal -->
+  <div id="settings-modal">
+    <div class="modal-content">
+      <button class="close-btn" onclick="toggleSettings()">×</button>
+      <h3>Settings</h3>
+      <label for="setting-chunk-size">Chunk Size (characters):</label>
+      <input type="number" id="setting-chunk-size" value="2000" min="100" step="100">
+      
+      <label for="setting-accent-color">Accent Color:</label>
+      <input type="color" id="setting-accent-color" value="#0078d4">
+      
+      <label for="setting-font-size">Font Size (px):</label>
+      <input type="number" id="setting-font-size" value="14" min="8" max="36">
+      
+      <label for="setting-font-family">Font Family:</label>
+      <select id="setting-font-family">
+        <option value="'Inter', 'Segoe UI', Arial, sans-serif">Inter / Segoe UI</option>
+        <option value="Arial, sans-serif">Arial</option>
+        <option value="'Times New Roman', serif">Times New Roman</option>
+      </select>
+      
+      <label for="setting-animations">Enable Animations:</label>
+      <input type="checkbox" id="setting-animations" checked>
+      
+      <label for="setting-animation-speed">Animation Speed (ms):</label>
+      <input type="number" id="setting-animation-speed" value="300" min="100" step="50">
+      
+      <label for="setting-multiline-clamp">Multiline Clamp (lines):</label>
+      <input type="number" id="setting-multiline-clamp" value="4" min="1" max="10">
+      
+      <label for="setting-notifications">Enable Notifications:</label>
+      <input type="checkbox" id="setting-notifications" checked>
+      
+      <label for="setting-notification-duration">Notification Duration (ms):</label>
+      <input type="number" id="setting-notification-duration" value="1000" min="500" step="100">
+      
+      <label for="setting-border-thickness">Border Thickness (px):</label>
+      <input type="number" id="setting-border-thickness" value="2" min="1" step="1">
+      
+      <label for="setting-border-radius">Border Radius for Parts (px):</label>
+      <input type="number" id="setting-border-radius" value="12" min="0" step="1">
+      
+      <label for="setting-max-parts">Maximum Parts Displayed (0 for unlimited):</label>
+      <input type="number" id="setting-max-parts" value="0" min="0" step="1">
+      
+      <label for="setting-custom-css">Custom CSS:</label>
+      <textarea id="setting-custom-css" placeholder="Enter custom CSS here..."></textarea>
+      
+      <button class="save-btn" onclick="saveSettings()">Save Settings</button>
+      <button class="reset-btn" onclick="resetSettings()">Reset to Default</button>
+    </div>
+  </div>
+  
   <script>
-    const themes = ['dark', 'light', 'fun'];
-    let currentThemeIndex = 0;
+    /* GLOBAL SETTINGS */
+    let chunkSize = 2000;
+    let accentColor = "#0078d4";
+    let fontSize = 14;
+    let fontFamily = "'Inter', 'Segoe UI', Arial, sans-serif";
+    let animationsEnabled = true;
+    let animationSpeed = 300;
+    let multilineClamp = 4;
+    let notificationsEnabled = true;
+    let notificationDuration = 1000;
+    let borderThickness = 2;
+    let borderRadius = 12;
+    let maxPartsDisplayed = 0;
+    let customCSS = "";
     
+    const defaultSettings = {
+      chunkSize: 2000,
+      accentColor: "#0078d4",
+      fontSize: 14,
+      fontFamily: "'Inter', 'Segoe UI', Arial, sans-serif",
+      animationsEnabled: true,
+      animationSpeed: 300,
+      multilineClamp: 4,
+      notificationsEnabled: true,
+      notificationDuration: 1000,
+      borderThickness: 2,
+      borderRadius: 12,
+      maxPartsDisplayed: 0,
+      customCSS: ""
+    };
+    
+    /* LOAD SETTINGS */
+    function loadSettings() {
+      const saved = localStorage.getItem("dmsSettings");
+      if (saved) {
+        const s = JSON.parse(saved);
+        chunkSize            = s.chunkSize            || defaultSettings.chunkSize;
+        accentColor          = s.accentColor          || defaultSettings.accentColor;
+        fontSize             = s.fontSize             || defaultSettings.fontSize;
+        fontFamily           = s.fontFamily           || defaultSettings.fontFamily;
+        animationsEnabled    = (s.animationsEnabled !== undefined) ? s.animationsEnabled : defaultSettings.animationsEnabled;
+        animationSpeed       = s.animationSpeed       || defaultSettings.animationSpeed;
+        multilineClamp       = s.multilineClamp       || defaultSettings.multilineClamp;
+        notificationsEnabled = (s.notificationsEnabled !== undefined) ? s.notificationsEnabled : defaultSettings.notificationsEnabled;
+        notificationDuration = s.notificationDuration || defaultSettings.notificationDuration;
+        borderThickness      = s.borderThickness      || defaultSettings.borderThickness;
+        borderRadius         = s.borderRadius         || defaultSettings.borderRadius;
+        maxPartsDisplayed    = s.maxPartsDisplayed    || defaultSettings.maxPartsDisplayed;
+        customCSS            = s.customCSS            || defaultSettings.customCSS;
+        
+        document.getElementById("setting-chunk-size").value           = chunkSize;
+        document.getElementById("setting-accent-color").value         = accentColor;
+        document.getElementById("setting-font-size").value            = fontSize;
+        document.getElementById("setting-font-family").value          = fontFamily;
+        document.getElementById("setting-animations").checked         = animationsEnabled;
+        document.getElementById("setting-animation-speed").value      = animationSpeed;
+        document.getElementById("setting-multiline-clamp").value      = multilineClamp;
+        document.getElementById("setting-notifications").checked      = notificationsEnabled;
+        document.getElementById("setting-notification-duration").value= notificationDuration;
+        document.getElementById("setting-border-thickness").value     = borderThickness;
+        document.getElementById("setting-border-radius").value        = borderRadius;
+        document.getElementById("setting-max-parts").value            = maxPartsDisplayed;
+        document.getElementById("setting-custom-css").value           = customCSS;
+        
+        document.documentElement.style.setProperty('--accent', accentColor);
+      }
+    }
+    loadSettings();
+    
+    /* SAVE SETTINGS */
+    function saveSettings() {
+      chunkSize            = parseInt(document.getElementById("setting-chunk-size").value, 10);
+      accentColor          = document.getElementById("setting-accent-color").value;
+      fontSize             = parseInt(document.getElementById("setting-font-size").value, 10);
+      fontFamily           = document.getElementById("setting-font-family").value;
+      animationsEnabled    = document.getElementById("setting-animations").checked;
+      animationSpeed       = parseInt(document.getElementById("setting-animation-speed").value, 10);
+      multilineClamp       = parseInt(document.getElementById("setting-multiline-clamp").value, 10);
+      notificationsEnabled = document.getElementById("setting-notifications").checked;
+      notificationDuration = parseInt(document.getElementById("setting-notification-duration").value, 10);
+      borderThickness      = parseInt(document.getElementById("setting-border-thickness").value, 10);
+      borderRadius         = parseInt(document.getElementById("setting-border-radius").value, 10);
+      maxPartsDisplayed    = parseInt(document.getElementById("setting-max-parts").value, 10);
+      customCSS            = document.getElementById("setting-custom-css").value;
+      
+      const s = {
+        chunkSize,
+        accentColor,
+        fontSize,
+        fontFamily,
+        animationsEnabled,
+        animationSpeed,
+        multilineClamp,
+        notificationsEnabled,
+        notificationDuration,
+        borderThickness,
+        borderRadius,
+        maxPartsDisplayed,
+        customCSS
+      };
+      localStorage.setItem("dmsSettings", JSON.stringify(s));
+      
+      document.documentElement.style.setProperty('--accent', accentColor);
+      document.body.style.fontSize   = fontSize + "px";
+      document.body.style.fontFamily = fontFamily;
+      
+      let styleElem = document.getElementById("custom-css");
+      if (!styleElem) {
+        styleElem = document.createElement("style");
+        styleElem.id = "custom-css";
+        document.head.appendChild(styleElem);
+      }
+      styleElem.innerHTML = `
+          .part { 
+            border: ${borderThickness}px solid var(--accent); 
+            border-radius: ${borderRadius}px; 
+            -webkit-line-clamp: ${multilineClamp};
+          }
+          ${customCSS}
+      `;
+      
+      toggleSettings();
+      alert("Settings saved!");
+    }
+    
+    /* RESET SETTINGS */
+    function resetSettings() {
+      document.getElementById("setting-chunk-size").value            = defaultSettings.chunkSize;
+      document.getElementById("setting-accent-color").value          = defaultSettings.accentColor;
+      document.getElementById("setting-font-size").value             = defaultSettings.fontSize;
+      document.getElementById("setting-font-family").value           = defaultSettings.fontFamily;
+      document.getElementById("setting-animations").checked          = defaultSettings.animationsEnabled;
+      document.getElementById("setting-animation-speed").value       = defaultSettings.animationSpeed;
+      document.getElementById("setting-multiline-clamp").value       = defaultSettings.multilineClamp;
+      document.getElementById("setting-notifications").checked       = defaultSettings.notificationsEnabled;
+      document.getElementById("setting-notification-duration").value = defaultSettings.notificationDuration;
+      document.getElementById("setting-border-thickness").value      = defaultSettings.borderThickness;
+      document.getElementById("setting-border-radius").value         = defaultSettings.borderRadius;
+      document.getElementById("setting-max-parts").value             = defaultSettings.maxPartsDisplayed;
+      document.getElementById("setting-custom-css").value            = defaultSettings.customCSS;
+      
+      saveSettings();
+    }
+    
+    /* TOGGLE SETTINGS MODAL */
+    function toggleSettings() {
+      const modal = document.getElementById("settings-modal");
+      modal.style.display = (modal.style.display === "flex") ? "none" : "flex";
+    }
+    
+    /* THEME SWITCHING */
+    const themesArr = ['dark', 'light', 'fun'];
+    let currentThemeIndex = 0;
     function applyTheme(theme) {
       document.body.classList.remove('dark-theme', 'light-theme', 'fun-theme');
       document.body.classList.add(theme + '-theme');
     }
-    
     function cycleTheme() {
-      currentThemeIndex = (currentThemeIndex + 1) % themes.length;
-      applyTheme(themes[currentThemeIndex]);
+      currentThemeIndex = (currentThemeIndex + 1) % themesArr.length;
+      applyTheme(themesArr[currentThemeIndex]);
     }
     
+    /* SPLIT MESSAGE */
     function splitMessage() {
       const input = document.getElementById('input').value;
       if (input.length === 0) {
@@ -289,14 +623,16 @@
       const partsContainer = document.getElementById('parts');
       const progressBar = document.getElementById('progress-bar');
       
-      // Clear previous results
       partsContainer.innerHTML = '';
       progressBar.style.width = '0%';
       
-      const chunkSize = 2000;
       let parts = [];
       for (let i = 0; i < input.length; i += chunkSize) {
         parts.push(input.slice(i, i + chunkSize));
+      }
+      
+      if (maxPartsDisplayed > 0 && parts.length > maxPartsDisplayed) {
+        parts = parts.slice(0, maxPartsDisplayed);
       }
       
       let progress = 0;
@@ -305,10 +641,11 @@
         partDiv.className = 'part';
         partDiv.textContent = `Part ${index + 1}: ${part}`;
         
+        const animDelay = animationsEnabled ? index * 150 : 0;
         setTimeout(() => {
           partDiv.style.opacity = '1';
           partDiv.style.transform = 'translateY(0)';
-        }, index * 150);
+        }, animDelay);
         
         partDiv.addEventListener('click', () => {
           const actualText = partDiv.textContent.replace(/^Part \d+: /, '');
@@ -317,27 +654,29 @@
             showCopyNotification();
             setTimeout(() => {
               partDiv.classList.remove('copied');
-            }, 1000);
+            }, notificationsEnabled ? notificationDuration : 1000);
           });
         });
         
         progress += (100 / parts.length);
         setTimeout(() => {
           progressBar.style.width = `${progress}%`;
-        }, index * 150);
+        }, animDelay);
         
         partsContainer.appendChild(partDiv);
       });
     }
     
+    /* SHOW COPY NOTIFICATION */
     function showCopyNotification() {
+      if (!notificationsEnabled) return;
       const notification = document.getElementById('copy-notification');
       notification.style.opacity = '1';
       notification.style.transform = 'translateY(0)';
       setTimeout(() => {
         notification.style.opacity = '0';
         notification.style.transform = 'translateY(-20px)';
-      }, 1000);
+      }, notificationDuration);
     }
   </script>
 </body>
