@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Discord Message Splitter - Made by Jan</title>
+  <meta charset="UTF-8">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+    
+    /* Base Variables */
+    :root {
+      --accent: #0078d4;
+      --container-radius: 20px;
+      --part-radius: 12px;
+      --btn-radius: 8px;
+    }
+    
+    /* Global & Transition */
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+      overflow: hidden;
+      transition: background 0.3s, color 0.3s;
+    }
+    
+    /* DARK THEME */
+    body.dark-theme {
+      background: linear-gradient(135deg, #121212, #000);
+      color: #fff;
+    }
+    body.dark-theme .container {
+      background: linear-gradient(135deg, #2a2a2a, #1a1a1a);
+      backdrop-filter: blur(10px);
+      color: #fff;
+    }
+    body.dark-theme textarea {
+      background-color: #444;
+      color: #fff;
+    }
+    body.dark-theme .part {
+      background-color: rgba(255,255,255,0.1);
+      border-color: var(--accent);
+    }
+    
+    /* LIGHT THEME */
+    body.light-theme {
+      background: linear-gradient(135deg, #f0f0f0, #fff);
+      color: #000;
+    }
+    body.light-theme .container {
+      background: linear-gradient(135deg, #fff, #e0e0e0);
+      backdrop-filter: blur(10px);
+      color: #000;
+    }
+    body.light-theme textarea {
+      background-color: #ddd;
+      color: #000;
+    }
+    body.light-theme .part {
+      background-color: #eee;
+      border-color: #005ea6;
+    }
+    
+    /* FUN THEME */
+    body.fun-theme {
+      background: linear-gradient(135deg, #8f94fb, #4e54c8);
+      color: #fff;
+    }
+    body.fun-theme .container {
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(15px);
+      color: #fff;
+    }
+    body.fun-theme textarea {
+      background-color: #ccc;
+      color: #000;
+    }
+    body.fun-theme .part {
+      background-color: rgba(255,255,255,0.2);
+      border-color: #ff4081;
+    }
+    
+    /* Centered Container */
+    .container {
+      width: 90%;
+      max-width: 600px;
+      max-height: 90vh;
+      margin: auto;
+      border-radius: var(--container-radius);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+      padding: 24px;
+      text-align: center;
+      position: relative;
+      animation: fadeIn 0.8s ease;
+      overflow: hidden;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    
+    h2 {
+      margin: 0 0 10px 0;
+    }
+    
+    /* Centered Textbox with new color */
+    textarea {
+      width: 80%;
+      display: block;
+      margin: 0 auto 10px auto;
+      height: 120px;
+      resize: none;
+      padding: 10px;
+      font-size: 14px;
+      border-radius: 10px;
+      border: none;
+      outline: none;
+    }
+    
+    /* Rounded Split Message Button: Blackish & Rectangular */
+    button.split-btn {
+      margin-top: 10px;
+      padding: 10px 20px;
+      background-color: #1a1a1a;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+      border-radius: var(--btn-radius);
+      transition: transform 0.2s, background-color 0.2s;
+    }
+    button.split-btn:hover {
+      transform: scale(1.05);
+      background-color: #333;
+    }
+    
+    /* Parts Container: Scrollable and dynamic */
+    #parts {
+      margin-top: 10px;
+      max-height: 60vh;
+      overflow-y: auto;
+    }
+    
+    /* Each Split Part */
+    .part {
+      font-size: 14px;
+      padding: 10px;
+      border: 2px solid;
+      border-radius: var(--part-radius);
+      margin-bottom: 8px;
+      cursor: pointer;
+      opacity: 0;
+      transform: translateY(-20px);
+      transition: opacity 0.3s, transform 0.3s, filter 0.3s;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 4;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .part:hover {
+      filter: brightness(1.2);
+    }
+    .part.copied {
+      filter: blur(3px);
+    }
+    .part:nth-child(odd) {
+      animation: colorCycle 5s infinite;
+    }
+    .part:nth-child(even) {
+      animation: colorCycleReverse 5s infinite;
+    }
+    @keyframes colorCycle {
+      0%   { border-color: var(--accent); }
+      50%  { border-color: #00c853; }
+      100% { border-color: var(--accent); }
+    }
+    @keyframes colorCycleReverse {
+      0%   { border-color: #00c853; }
+      50%  { border-color: var(--accent); }
+      100% { border-color: #00c853; }
+    }
+    
+    /* Floating Copied Notification */
+    #copy-notification {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background-color: var(--accent);
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: var(--btn-radius);
+      opacity: 0;
+      pointer-events: none;
+      font-weight: bold;
+      transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+    
+    /* Theme Toggle Button as Moon Emoji */
+    button.theme-toggle {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      padding: 8px 12px;
+      background-color: #1a1a1a;
+      color: #fff;
+      border: none;
+      border-radius: var(--btn-radius);
+      cursor: pointer;
+      font-size: 20px;
+      transition: transform 0.2s, background-color 0.2s;
+    }
+    button.theme-toggle:hover {
+      transform: scale(1.1);
+      background-color: #333;
+    }
+    
+    /* Rainbow text for "Jan" */
+    .rainbow-text {
+      background: linear-gradient(to right, red, orange, yellow, green, blue, indigo, violet);
+      background-size: 400% auto;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: rainbow 2s linear infinite;
+    }
+    @keyframes rainbow {
+      0%   { background-position: 0% center; }
+      100% { background-position: 100% center; }
+    }
+    
+    footer {
+      margin-top: 10px;
+      font-size: 12px;
+      color: #bbb;
+    }
+    footer a {
+      color: #fff;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    footer a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body class="dark-theme">
+  <div class="container">
+    <!-- Theme Toggle Button: Moon Emoji -->
+    <button class="theme-toggle" onclick="cycleTheme()">🌙</button>
+    
+    <h2>Discord Message Splitter</h2>
+    
+    <textarea id="input" placeholder="Paste your message here..."></textarea>
+    <button class="split-btn" onclick="splitMessage()">Split Message</button>
+    
+    <div id="progress-bar"></div>
+    <div id="parts"></div>
+    
+    <!-- Floating Copied Notification -->
+    <div id="copy-notification">Copied!</div>
+    
+    <footer>
+      Made by <a href="https://github.com/Vloqus" target="_blank"><span class="rainbow-text">Jan</span></a>
+    </footer>
+  </div>
+  
+  <script>
+    const themes = ['dark', 'light', 'fun'];
+    let currentThemeIndex = 0;
+    
+    function applyTheme(theme) {
+      document.body.classList.remove('dark-theme', 'light-theme', 'fun-theme');
+      document.body.classList.add(theme + '-theme');
+    }
+    
+    function cycleTheme() {
+      currentThemeIndex = (currentThemeIndex + 1) % themes.length;
+      applyTheme(themes[currentThemeIndex]);
+    }
+    
+    function splitMessage() {
+      const input = document.getElementById('input').value;
+      if (input.length === 0) {
+        alert("Please enter some text to split.");
+        return;
+      }
+      const partsContainer = document.getElementById('parts');
+      const progressBar = document.getElementById('progress-bar');
+      
+      // Clear previous results
+      partsContainer.innerHTML = '';
+      progressBar.style.width = '0%';
+      
+      const chunkSize = 2000;
+      let parts = [];
+      for (let i = 0; i < input.length; i += chunkSize) {
+        parts.push(input.slice(i, i + chunkSize));
+      }
+      
+      let progress = 0;
+      parts.forEach((part, index) => {
+        const partDiv = document.createElement('div');
+        partDiv.className = 'part';
+        partDiv.textContent = `Part ${index + 1}: ${part}`;
+        
+        setTimeout(() => {
+          partDiv.style.opacity = '1';
+          partDiv.style.transform = 'translateY(0)';
+        }, index * 150);
+        
+        partDiv.addEventListener('click', () => {
+          const actualText = partDiv.textContent.replace(/^Part \d+: /, '');
+          navigator.clipboard.writeText(actualText).then(() => {
+            partDiv.classList.add('copied');
+            showCopyNotification();
+            setTimeout(() => {
+              partDiv.classList.remove('copied');
+            }, 1000);
+          });
+        });
+        
+        progress += (100 / parts.length);
+        setTimeout(() => {
+          progressBar.style.width = `${progress}%`;
+        }, index * 150);
+        
+        partsContainer.appendChild(partDiv);
+      });
+    }
+    
+    function showCopyNotification() {
+      const notification = document.getElementById('copy-notification');
+      notification.style.opacity = '1';
+      notification.style.transform = 'translateY(0)';
+      setTimeout(() => {
+        notification.style.opacity = '0';
+        notification.style.transform = 'translateY(-20px)';
+      }, 1000);
+    }
+  </script>
+</body>
+</html>
