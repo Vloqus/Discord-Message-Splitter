@@ -7,9 +7,9 @@ A sleek, fully customizable single-page web app that splits a long Discord messa
 ## Features
 
 - **Three Themes:**  
-  - **Dark:** A moody, gradient black background.  
+  - **Dark:** A moody, black background.  
   - **Light:** A clean, white/light gray design.  
-  - **Fun:** A vibrant, multi-color gradient with a blurred glass effect.
+  - **Fun:** A vibrant colored theme.
 
 - **Responsive Layout:**  
   - The main input area (textarea) is centered and styled in gray.
