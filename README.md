@@ -35,7 +35,7 @@ A sleek, fully customizable single-page web app that splits a long Discord messa
 2. **Open the App:**  
    Open `index.html` in any modern web browser.
 OR
-  Use it online by using 
+  Use it online by using https://vloqus.github.io/Discord-Message-Splitter/
 
 3. **Split a Message:**  
    - Paste a long message (over 2000 characters) into the textarea.
